@@ -93,20 +93,17 @@ public class QuestionDetailActivity extends AppCompatActivity {
 
 */
 
-
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_question_detail);
+
 
         // 渡ってきたQuestionのオブジェクトを保持する
         Bundle extras = getIntent().getExtras();
         mQuestion = (Question) extras.get("question");
 
         setTitle(mQuestion.getTitle()); //質問のタイトルを画面のタイトルにセットする
-
-
 
         // ListViewの準備
         mListView = (ListView) findViewById(R.id.listView);
@@ -140,7 +137,6 @@ public class QuestionDetailActivity extends AppCompatActivity {
         DatabaseReference dataBaseReference = FirebaseDatabase.getInstance().getReference();
         mAnswerRef = dataBaseReference.child(Const.ContentsPATH).child(String.valueOf(mQuestion.getGenre())).child(mQuestion.getQuestionUid()).child(Const.AnswersPATH);
         mAnswerRef.addChildEventListener(mEventListener);
-
 
     }
 

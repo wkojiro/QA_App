@@ -1,6 +1,7 @@
 package jp.techacademy.wakabayashi.kojiro.qa_app;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -17,12 +18,14 @@ import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.ToggleButton;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -33,6 +36,8 @@ public class QuestionDetailListAdapter extends BaseAdapter {
 
     private LayoutInflater mLayoutInflater = null;
 
+
+    private ToggleButton togglebutton;
 
     /*
     LayoutInflaterは、指定したxmlのレイアウト(View)リソースを利用できる仕組み
@@ -53,12 +58,16 @@ http://yuki312.blogspot.jp/2012/02/thisgetapplicationcontextactivityapplic.html
     */
     private Question mQustion;
 
+    private Favorite mFavorite;
+
     public String quesitionID ;
     boolean isFavorite = false;
     // FirebaseAuthのオブジェクトを取得する
     FirebaseAuth mAuth;
+    private DatabaseReference mDatabase;
 
 
+    //ここでQuestionを取得していると思われる。
     public QuestionDetailListAdapter(Context context, Question question) {
         mLayoutInflater = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         mQustion = question;
@@ -103,55 +112,64 @@ http://yuki312.blogspot.jp/2012/02/thisgetapplicationcontextactivityapplic.html
         public void onClick(View v) {
             Log.d("お気に入りを登録する","クリック");
 
-            if(isFavorite == false){
+            if(togglebutton.isChecked()) {
 
+
+                togglebutton.setTextOn("お気に入り");
+
+                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                if (user == null) {
+                    // ログインしていなければログイン画面に遷移させる
+                    Intent intent = new Intent(getpplicationContext(), LoginActivity.class);
+                    startActivity(intent);
+                } else {
+                    // ログインユーザーのFavoritePATHへ移動
+                    DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
+                    DatabaseReference favoriteRef = databaseReference.child(Const.UsersPATH).child(user.getUid()).child(Const.FavoritesPATH).child(mFavorite.getFavoriteUid());
+
+                    favoriteRef.removeValue();
+                }
+
+            } else {
+
+                togglebutton.setTextOff("解除");
                 // FirebaseAuthのオブジェクトを取得する
                 mAuth = FirebaseAuth.getInstance();
-              //Log.d("", this.mQuestion);
+                //Log.d("", this.mQuestion);
                 FirebaseUser user = mAuth.getCurrentUser();
 
-               Log.d("User", String.valueOf(user));
+                Log.d("User", String.valueOf(user));
 
-               DatabaseReference dataBaseReference = FirebaseDatabase.getInstance().getReference();
-               DatabaseReference favoriteRef = dataBaseReference.child(Const.UsersPATH).child(user.getUid()).child(Const.FavoritesPATH);
+                DatabaseReference dataBaseReference = FirebaseDatabase.getInstance().getReference();
+                DatabaseReference favoriteRef = dataBaseReference.child(Const.UsersPATH).child(user.getUid()).child(Const.FavoritesPATH);
 
                 Log.d("FavoriteRef", String.valueOf(favoriteRef));
                 Map<String, String> data = new HashMap<String, String>();
 
                 // questionID
-               data.put("questionid", String.valueOf(mQustion.getQuestionUid()));
+                data.put("questionid", String.valueOf(mQustion.getQuestionUid()));
 
-               favoriteRef.push().setValue(data);
-
-                isFavorite = true;
-
-            }else if(isFavorite = true){
+                favoriteRef.push().setValue(data);
 
 
-                isFavorite = false;
             }
 
         }
     };
 
+    public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
 
+
+        if (databaseError == null) {
+            Log.d("","かきくけこ");
+        } else {
+            Log.d("","あいうえお");
+        }
+    }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         Log.d("いつ","呼ばれているか");
-
-
-        /*
-
-        この段階でこのユーザーにこの質問のIDを持っているかを確認する。
-        試しにクリックしたのちにLogが出るか確認してから。
-        でない。
-
-         */
-
-
-
-
 
 
         //質問側のView
@@ -160,18 +178,12 @@ http://yuki312.blogspot.jp/2012/02/thisgetapplicationcontextactivityapplic.html
                 convertView = mLayoutInflater.inflate(R.layout.list_question_detail, parent, false);
             }
 
+            togglebutton = (ToggleButton) convertView.findViewById(R.id.FavButton);
+            togglebutton.setOnClickListener(mFavButtonClickListener);
 
 
-            Button button = (Button) convertView.findViewById(R.id.FavButton);
 
 
-            if(isFavorite == false){
-            button.setText("お気に入り");
-            }else if(isFavorite = true) {
-            button.setText("お気に入り済み");
-            }
-
-            button.setOnClickListener(mFavButtonClickListener);
 
             String body = mQustion.getBody();
             String name = mQustion.getName();

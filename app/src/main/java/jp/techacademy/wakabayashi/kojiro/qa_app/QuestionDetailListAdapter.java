@@ -37,7 +37,7 @@ public class QuestionDetailListAdapter extends BaseAdapter {
     private LayoutInflater mLayoutInflater = null;
 
 
-    private ToggleButton togglebutton;
+   // private ToggleButton togglebutton;
 
     /*
     LayoutInflaterは、指定したxmlのレイアウト(View)リソースを利用できる仕組み
@@ -58,13 +58,16 @@ http://yuki312.blogspot.jp/2012/02/thisgetapplicationcontextactivityapplic.html
     */
     private Question mQustion;
 
-    private Favorite mFavorite;
+   // private Favorite mFavorite;
 
-    public String quesitionID ;
-    boolean isFavorite = false;
+   // public String quesitionID ;
+   // boolean isFavorite = false;
     // FirebaseAuthのオブジェクトを取得する
-    FirebaseAuth mAuth;
-    private DatabaseReference mDatabase;
+   // FirebaseAuth mAuth;
+    //private DatabaseReference mDatabase;
+
+
+
 
 
     //ここでQuestionを取得していると思われる。
@@ -105,7 +108,7 @@ http://yuki312.blogspot.jp/2012/02/thisgetapplicationcontextactivityapplic.html
     }
 
 
-
+/*
     //お気に入りを登録する
     public View.OnClickListener mFavButtonClickListener = new View.OnClickListener() {
         @Override
@@ -120,8 +123,8 @@ http://yuki312.blogspot.jp/2012/02/thisgetapplicationcontextactivityapplic.html
                 FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
                 if (user == null) {
                     // ログインしていなければログイン画面に遷移させる
-                    Intent intent = new Intent(getpplicationContext(), LoginActivity.class);
-                    startActivity(intent);
+                   // Intent intent = new Intent(getpplicationContext(), LoginActivity.class);
+                   // startActivity(intent);
                 } else {
                     // ログインユーザーのFavoritePATHへ移動
                     DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
@@ -166,6 +169,8 @@ http://yuki312.blogspot.jp/2012/02/thisgetapplicationcontextactivityapplic.html
             Log.d("","あいうえお");
         }
     }
+*/
+
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
@@ -178,10 +183,8 @@ http://yuki312.blogspot.jp/2012/02/thisgetapplicationcontextactivityapplic.html
                 convertView = mLayoutInflater.inflate(R.layout.list_question_detail, parent, false);
             }
 
-            togglebutton = (ToggleButton) convertView.findViewById(R.id.FavButton);
-            togglebutton.setOnClickListener(mFavButtonClickListener);
-
-
+          //  togglebutton = (ToggleButton) convertView.findViewById(R.id.FavButton);
+          //  togglebutton.setOnClickListener(mFavButtonClickListener);
 
 
 

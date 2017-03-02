@@ -18,6 +18,7 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -33,7 +34,7 @@ public class LoginActivity extends AppCompatActivity {
     EditText mPasswordEditText;
     EditText mNameEditText;
     ProgressDialog mProgress;
-
+    private DatabaseReference mFavoriteRef;
     FirebaseAuth mAuth;
     OnCompleteListener<AuthResult> mCreateAccountListener;
     OnCompleteListener<AuthResult> mLoginListener;
@@ -108,7 +109,12 @@ public class LoginActivity extends AppCompatActivity {
                     FirebaseUser user = mAuth.getCurrentUser();
                     DatabaseReference userRef = mDataBaseReference.child(Const.UsersPATH).child(user.getUid());
 
-
+/*
+                    QuestionDetailActivity mFavoriteEventListener1 = new QuestionDetailActivity();
+                    DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
+                    mFavoriteRef = databaseReference.child(Const.UsersPATH).child(user.getUid()).child(Const.FavoritesPATH);
+                    mFavoriteRef.addChildEventListener(mFavoriteEventListener1.mFavoriteEventListener);
+*/
                     //初回ログインかどうかで処理を変えている：アカウント登録後のログインの場合
                     if (mIsCreateAccount) {
                         // アカウント作成の時は表示名をFirebaseに保存する
@@ -215,6 +221,7 @@ public class LoginActivity extends AppCompatActivity {
 
 
 
+
     private void createAccount(String email, String password) {
         // プログレスダイアログを表示する
         mProgress.show();
@@ -231,6 +238,9 @@ public class LoginActivity extends AppCompatActivity {
         // ログインする
         mAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener(mLoginListener);
         Log.d("④ログインを試みる","④ログインを試みる");
+
+
+
     }
 
     private void saveName(String name) {

@@ -27,6 +27,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -35,18 +36,137 @@ public class MainActivity extends AppCompatActivity {
 
     private Toolbar mToolbar;
     private int mGenre = 0;
+    private DatabaseReference mQestion;
 
     // --- ここから ---
     private DatabaseReference mDatabaseReference;
+    private DatabaseReference mFavoriteRef;
     private DatabaseReference mGenreRef;
     private ListView mListView;
     private ArrayList<Question> mQuestionArrayList;
     private QuestionsListAdapter mAdapter;
 
+
+    private ChildEventListener mFavoriteEventListener = new ChildEventListener() {
+        @Override
+        public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+            HashMap map = (HashMap) dataSnapshot.getValue();
+
+           // String questionUid = dataSnapshot.getKey();
+            String questionUid = (String) map.get("questionid");
+            Log.d("マップmap",String.valueOf(questionUid));
+
+            View v = findViewById(android.R.id.content);
+            Snackbar.make(v,"お気に入りの一覧です。",Snackbar.LENGTH_LONG).show();
+
+            /*
+            仮説１
+            questionUidを元にFirebaseから直接質問を取得して、Arrayにぶち込む
+            genreの情報がない状態で、どのようにデータにたどりつけるか。
+            */
+            Query query = mDatabaseReference.orderByChild("contents").equalTo(String.valueOf(questionUid));
+            query.addChildEventListener(new ChildEventListener() {
+                @Override
+                public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+
+                    Log.d("aa","ddd");
+
+                }
+
+                @Override
+                public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+                }
+
+                @Override
+                public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+                }
+
+                @Override
+                public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            });
+
+
+
+
+
+          //  ArrayList<Question> questionArrayList = new ArrayList<Question>();
+          //  HashMap questionMap = (HashMap) map.get("question");
+           // mQestion = (DatabaseReference) mDatabaseReference.orderByChild("contents").equalTo("-Kdhv38NX0t5wxx5OxfU");
+            //Log.d("mquesiton",String.valueOf(mQestion));
+
+            /*
+            HashMap map = (HashMap) dataSnapshot.getValue();
+            Log.d("マップmap",String.valueOf(map));
+            String title = (String) map.get("title");
+            String body = (String) map.get("body");
+            String name = (String) map.get("name");
+            String uid = (String) map.get("uid");
+            String imageString = (String) map.get("image");
+            Bitmap image = null;
+            byte[] bytes;
+            if (imageString != null) {
+                BitmapFactory.Options options = new BitmapFactory.Options();
+                bytes = Base64.decode(imageString, Base64.DEFAULT);
+            } else {
+                bytes = new byte[0];
+            }
+
+            ArrayList<Answer> answerArrayList = new ArrayList<Answer>();
+            HashMap answerMap = (HashMap) map.get("answers");
+            if (answerMap != null) {
+                for (Object key : answerMap.keySet()) {
+                    HashMap temp = (HashMap) answerMap.get((String) key);
+                    String answerBody = (String) temp.get("body");
+                    String answerName = (String) temp.get("name");
+                    String answerUid = (String) temp.get("uid");
+                    Answer answer = new Answer(answerBody, answerName, answerUid, (String) key);
+                    answerArrayList.add(answer);
+                }
+            }
+
+            Question question = new Question(title, body, name, uid, dataSnapshot.getKey(), mGenre, bytes, answerArrayList);
+            mQuestionArrayList.add(question);
+            mAdapter.notifyDataSetChanged();
+            */
+
+        }
+
+        @Override
+        public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+        }
+
+        @Override
+        public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+        }
+
+        @Override
+        public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+        }
+
+        @Override
+        public void onCancelled(DatabaseError databaseError) {
+
+        }
+    };
+
+
     private ChildEventListener mEventListener = new ChildEventListener() {
         @Override
         public void onChildAdded(DataSnapshot dataSnapshot, String s) {
             HashMap map = (HashMap) dataSnapshot.getValue();
+            Log.d("マップmap",String.valueOf(map));
             String title = (String) map.get("title");
             String body = (String) map.get("body");
             String name = (String) map.get("name");
@@ -180,6 +300,9 @@ public class MainActivity extends AppCompatActivity {
                 } else if (id == R.id.nav_compter) {
                     mToolbar.setTitle("コンピューター");
                     mGenre = 4;
+                } else if (id == R.id.nav_favorite) {
+                    mToolbar.setTitle("お気に入り");
+                    mGenre = 99;
                 }
 
                 DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -194,14 +317,40 @@ public class MainActivity extends AppCompatActivity {
                 if (mGenreRef != null) {
                     mGenreRef.removeEventListener(mEventListener);
                 }
-                mGenreRef = mDatabaseReference.child(Const.ContentsPATH).child(String.valueOf(mGenre));
-                mGenreRef.addChildEventListener(mEventListener);
+
+                if(mGenre == 99){
+                    // ログイン済みのユーザーを収録する
+                    FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+
+                    if (user == null) {
+                        // ログインしていなければログイン画面に遷移させる
+                        Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
+                        startActivity(intent);
+
+                    } else {
+                        //お気に入りに入っているQuesitionidを取得して、そこから新たなmQuestionArrayListを作る。
+
+                        mFavoriteRef = mDatabaseReference.child(Const.UsersPATH).child(user.getUid()).child(Const.FavoritesPATH);
+                      //  mGenreRef = mDatabaseReference.child(Const.ContentsPATH).child(String.valueOf(mGenre));
+                       // mGenreRef = mDatabaseReference.child(Const.ContentsPATH);
+                        Log.d("mFavoriteRef",String.valueOf(mFavoriteRef));
+
+                        mFavoriteRef.addChildEventListener(mFavoriteEventListener);
+                    }
+
+                } else {
+                    mGenreRef = mDatabaseReference.child(Const.ContentsPATH).child(String.valueOf(mGenre));
+                    Log.d("mGenreRef",String.valueOf(mGenreRef));
+                    mGenreRef.addChildEventListener(mEventListener);
+                }
                 return true;
+
             }
         });
 
         // Firebase
-        mDatabaseReference = FirebaseDatabase.getInstance().getReference();
+        mDatabaseReference = FirebaseDatabase.getInstance().getReference(); //Rootのデータベース情報をとりあえず確保。
+        Log.d("mDatabaseReference",String.valueOf(mDatabaseReference));
 
         // ListViewの準備
         mListView = (ListView) findViewById(R.id.listView);

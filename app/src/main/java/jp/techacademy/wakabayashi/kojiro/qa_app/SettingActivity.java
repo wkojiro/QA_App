@@ -23,6 +23,7 @@ public class SettingActivity extends AppCompatActivity {
 
     DatabaseReference mDataBaseReference;
     private EditText mNameText;
+    private DatabaseReference mFavoriteRef;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,9 +79,21 @@ public class SettingActivity extends AppCompatActivity {
         logoutButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
+                /*
+                QuestionDetailActivity mFavoriteEventListener1 = new QuestionDetailActivity();
+                //  DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
+                // mFavoriteRef = databaseReference.child(Const.UsersPATH).child(user.getUid()).child(Const.FavoritesPATH);
+
+                mFavoriteRef.removeEventListener(mFavoriteEventListener1.mFavoriteEventListener);
+                */
+
+
                 FirebaseAuth.getInstance().signOut();
                 mNameText.setText("");
                 Snackbar.make(v, "ログアウトしました", Snackbar.LENGTH_LONG).show();
+
+
             }
         });
     }

@@ -40,6 +40,7 @@ public class MainActivity extends AppCompatActivity {
     private Toolbar mToolbar;
     private int mGenre = 0;
     private DatabaseReference mQestion;
+    private String genreid;
 
     private FirebaseAuth.AuthStateListener mAuthListener;
 
@@ -58,7 +59,14 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onDataChange(DataSnapshot dataSnapshot) {
 
+            String gid = dataSnapshot.getRef().getKey();
+            int gii = Integer.parseInt(gid);
+
+            Log.d("マップmap",String.valueOf(gid));
             HashMap map = (HashMap) dataSnapshot.getValue();
+           // Log.d("マップmap",String.valueOf(map));
+
+           // dataSnapshot.getRef().getParent();
 
             if(map!=null)
             {
@@ -67,7 +75,8 @@ public class MainActivity extends AppCompatActivity {
                 while(iter.hasNext()==true)
                 {
                     HashMap map_child = (HashMap)map.get(iter.next());
-
+                   // Log.d("マップmap",String.valueOf(map_child));
+                   // String genre = (String) map_child.get()
                     String title = (String) map_child.get("title");
                     String body = (String) map_child.get("body");
                     String name = (String) map_child.get("name");
@@ -83,7 +92,7 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     ArrayList<Answer> answerArrayList = new ArrayList<Answer>();
-                    HashMap answerMap = (HashMap) map.get("answers");
+                    HashMap answerMap = (HashMap) map_child.get("answers");
                     if (answerMap != null) {
                         for (Object key : answerMap.keySet()) {
                             HashMap temp = (HashMap) answerMap.get((String) key);
@@ -95,7 +104,7 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }
 
-                    Question question = new Question(title, body, name, uid, dataSnapshot.getKey(), mGenre, bytes, answerArrayList);
+                    Question question = new Question(title, body, name, uid, dataSnapshot.getKey(), gii, bytes, answerArrayList);
                     mQuestionArrayList.add(question);
                     mAdapter.notifyDataSetChanged();
                 }
@@ -118,7 +127,7 @@ public class MainActivity extends AppCompatActivity {
 
            // String questionUid = dataSnapshot.getKey
             String questionUid = (String) map.get("questionid");
-            Log.d("マップmap",String.valueOf(questionUid));
+            //Log.d("マップmap",String.valueOf(questionUid));
 
             View v = findViewById(android.R.id.content);
             Snackbar.make(v,"お気に入りの一覧です。",Snackbar.LENGTH_LONG).show();
@@ -163,7 +172,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onChildAdded(DataSnapshot dataSnapshot, String s) {
             HashMap map = (HashMap) dataSnapshot.getValue();
-            Log.d("マップmap",String.valueOf(map));
+           // Log.d("マップmap",String.valueOf(map));
             String title = (String) map.get("title");
             String body = (String) map.get("body");
             String name = (String) map.get("name");
@@ -333,6 +342,7 @@ public class MainActivity extends AppCompatActivity {
                 } else if (id == R.id.nav_favorite) {
                     mToolbar.setTitle("お気に入り");
                     mGenre = 99;
+
                 }
 
                 DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);

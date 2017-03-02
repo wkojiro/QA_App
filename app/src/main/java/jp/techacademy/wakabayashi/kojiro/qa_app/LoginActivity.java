@@ -66,6 +66,7 @@ public class LoginActivity extends AppCompatActivity {
         // FirebaseAuthのオブジェクトを取得する
         mAuth = FirebaseAuth.getInstance();
 
+
         // アカウント作成処理のリスナー (onCompleteListenerはFireBaseが持っているクラス）
         mCreateAccountListener = new OnCompleteListener<AuthResult>() {
             @Override

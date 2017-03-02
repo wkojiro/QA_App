@@ -92,6 +92,7 @@ public class SettingActivity extends AppCompatActivity {
                 FirebaseAuth.getInstance().signOut();
                 mNameText.setText("");
                 Snackbar.make(v, "ログアウトしました", Snackbar.LENGTH_LONG).show();
+                finish();
 
 
             }

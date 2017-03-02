@@ -28,15 +28,20 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
+
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 
 public class MainActivity extends AppCompatActivity {
 
     private Toolbar mToolbar;
     private int mGenre = 0;
     private DatabaseReference mQestion;
+
+    private FirebaseAuth.AuthStateListener mAuthListener;
 
     // --- ここから ---
     private DatabaseReference mDatabaseReference;
@@ -46,13 +51,72 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<Question> mQuestionArrayList;
     private QuestionsListAdapter mAdapter;
 
+   // private ValueEventListener mQueryListener;
+
+
+    private ValueEventListener mQueryListener = new ValueEventListener() {
+        @Override
+        public void onDataChange(DataSnapshot dataSnapshot) {
+
+            HashMap map = (HashMap) dataSnapshot.getValue();
+
+            if(map!=null)
+            {
+                Iterator iter = map.keySet().iterator();
+
+                while(iter.hasNext()==true)
+                {
+                    HashMap map_child = (HashMap)map.get(iter.next());
+
+                    String title = (String) map_child.get("title");
+                    String body = (String) map_child.get("body");
+                    String name = (String) map_child.get("name");
+                    String uid = (String) map_child.get("uid");
+                    String imageString = (String) map_child.get("image");
+                    Bitmap image = null;
+                    byte[] bytes;
+                    if (imageString != null) {
+                        BitmapFactory.Options options = new BitmapFactory.Options();
+                        bytes = Base64.decode(imageString, Base64.DEFAULT);
+                    } else {
+                        bytes = new byte[0];
+                    }
+
+                    ArrayList<Answer> answerArrayList = new ArrayList<Answer>();
+                    HashMap answerMap = (HashMap) map.get("answers");
+                    if (answerMap != null) {
+                        for (Object key : answerMap.keySet()) {
+                            HashMap temp = (HashMap) answerMap.get((String) key);
+                            String answerBody = (String) temp.get("body");
+                            String answerName = (String) temp.get("name");
+                            String answerUid = (String) temp.get("uid");
+                            Answer answer = new Answer(answerBody, answerName, answerUid, (String) key);
+                            answerArrayList.add(answer);
+                        }
+                    }
+
+                    Question question = new Question(title, body, name, uid, dataSnapshot.getKey(), mGenre, bytes, answerArrayList);
+                    mQuestionArrayList.add(question);
+                    mAdapter.notifyDataSetChanged();
+                }
+            }
+
+        }
+
+        @Override
+        public void onCancelled(DatabaseError databaseError) {
+
+        }
+
+    };
+
 
     private ChildEventListener mFavoriteEventListener = new ChildEventListener() {
         @Override
         public void onChildAdded(DataSnapshot dataSnapshot, String s) {
             HashMap map = (HashMap) dataSnapshot.getValue();
 
-           // String questionUid = dataSnapshot.getKey();
+           // String questionUid = dataSnapshot.getKey
             String questionUid = (String) map.get("questionid");
             Log.d("マップmap",String.valueOf(questionUid));
 
@@ -63,80 +127,13 @@ public class MainActivity extends AppCompatActivity {
             仮説１
             questionUidを元にFirebaseから直接質問を取得して、Arrayにぶち込む
             genreの情報がない状態で、どのようにデータにたどりつけるか。
+            mDatabaseReference = FirebaseDatabase.getInstance().getReference();
             */
-            Query query = mDatabaseReference.orderByChild("contents").equalTo(String.valueOf(questionUid));
-            query.addChildEventListener(new ChildEventListener() {
-                @Override
-                public void onChildAdded(DataSnapshot dataSnapshot, String s) {
 
-                    Log.d("aa","ddd");
-
-                }
-
-                @Override
-                public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-
-                }
-
-                @Override
-                public void onChildRemoved(DataSnapshot dataSnapshot) {
-
-                }
-
-                @Override
-                public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
-                }
-
-                @Override
-                public void onCancelled(DatabaseError databaseError) {
-
-                }
-            });
-
-
-
-
-
-          //  ArrayList<Question> questionArrayList = new ArrayList<Question>();
-          //  HashMap questionMap = (HashMap) map.get("question");
-           // mQestion = (DatabaseReference) mDatabaseReference.orderByChild("contents").equalTo("-Kdhv38NX0t5wxx5OxfU");
-            //Log.d("mquesiton",String.valueOf(mQestion));
-
-            /*
-            HashMap map = (HashMap) dataSnapshot.getValue();
-            Log.d("マップmap",String.valueOf(map));
-            String title = (String) map.get("title");
-            String body = (String) map.get("body");
-            String name = (String) map.get("name");
-            String uid = (String) map.get("uid");
-            String imageString = (String) map.get("image");
-            Bitmap image = null;
-            byte[] bytes;
-            if (imageString != null) {
-                BitmapFactory.Options options = new BitmapFactory.Options();
-                bytes = Base64.decode(imageString, Base64.DEFAULT);
-            } else {
-                bytes = new byte[0];
-            }
-
-            ArrayList<Answer> answerArrayList = new ArrayList<Answer>();
-            HashMap answerMap = (HashMap) map.get("answers");
-            if (answerMap != null) {
-                for (Object key : answerMap.keySet()) {
-                    HashMap temp = (HashMap) answerMap.get((String) key);
-                    String answerBody = (String) temp.get("body");
-                    String answerName = (String) temp.get("name");
-                    String answerUid = (String) temp.get("uid");
-                    Answer answer = new Answer(answerBody, answerName, answerUid, (String) key);
-                    answerArrayList.add(answer);
-                }
-            }
-
-            Question question = new Question(title, body, name, uid, dataSnapshot.getKey(), mGenre, bytes, answerArrayList);
-            mQuestionArrayList.add(question);
-            mAdapter.notifyDataSetChanged();
-            */
+            mDatabaseReference.child("contents").child("1").orderByKey().equalTo(questionUid).addListenerForSingleValueEvent(mQueryListener);
+            mDatabaseReference.child("contents").child("2").orderByKey().equalTo(questionUid).addListenerForSingleValueEvent(mQueryListener);
+            mDatabaseReference.child("contents").child("3").orderByKey().equalTo(questionUid).addListenerForSingleValueEvent(mQueryListener);
+            mDatabaseReference.child("contents").child("4").orderByKey().equalTo(questionUid).addListenerForSingleValueEvent(mQueryListener);
 
         }
 
@@ -249,6 +246,36 @@ public class MainActivity extends AppCompatActivity {
         mToolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(mToolbar);
 
+
+
+
+        mAuthListener = new FirebaseAuth.AuthStateListener() {
+            @Override
+            public void onAuthStateChanged(FirebaseAuth firebaseAuth) {
+                FirebaseUser user = firebaseAuth.getCurrentUser();
+                if (user != null) {
+                    // User is signed in
+                    Log.d("ログイン", "しました");
+
+                    // DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
+                    // mFavoriteRef = databaseReference.child(Const.UsersPATH).child(user.getUid()).child(Const.FavoritesPATH);
+                    //  mFavoriteRef.addChildEventListener(mFavoriteEventListener);
+
+
+                } else {
+                    // User is signed out
+                    Log.d("ログアウト", "しました");
+                    // DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
+                    // mFavoriteRef = databaseReference.child(Const.UsersPATH).child(user.getUid()).child(Const.FavoritesPATH);
+                    // mFavoriteRef.removeEventListener(mFavoriteEventListener);
+
+                }
+                // ...
+            }
+        };
+        FirebaseAuth.getInstance().addAuthStateListener(mAuthListener);
+
+
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -275,6 +302,9 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+
+
+
 
         // ナビゲーションドロワーの設定
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -383,9 +413,20 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         if (id == R.id.action_settings) {
-            Intent intent = new Intent(getApplicationContext(), SettingActivity.class);
-            startActivity(intent);
-            return true;
+
+            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+
+            if (user == null) {
+                // ログインしていなければログイン画面に遷移させる
+                Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
+                startActivity(intent);
+
+            } else {
+
+                Intent intent = new Intent(getApplicationContext(), SettingActivity.class);
+                startActivity(intent);
+                //return true; これがあるとfinish();が効かなかった。
+            }
         }
 
         return super.onOptionsItemSelected(item);

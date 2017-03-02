@@ -38,7 +38,7 @@ public class QuestionDetailActivity extends AppCompatActivity {
     private String mCurrentFavoriteUid;
 
     FirebaseAuth mAuth;
-
+    private FirebaseAuth.AuthStateListener mAuthListener;
     private QuestionDetailListAdapter mAdapter;
 
     private DatabaseReference mAnswerRef;
@@ -102,30 +102,9 @@ public class QuestionDetailActivity extends AppCompatActivity {
             Favorite addedFavorite = new Favorite(map.get("questionid"), favoriteUid);
 
 
-           // HashMap map = (HashMap) dataSnapshot.getValue();
-
-            //取れ立てほやほやをArrayに保存する準備。
-           // String favoriteUid = dataSnapshot.getKey();
-           // String favquestionUid = (String) map.get("questionid");
-
-/*
-           Log.d("favriteUid",favoriteUid);
-           Log.d("favQuestionUid",favquestionUid);
-
-           // for(Favorite favorite : mFavorite.getFavorites()) {
-                // 該当のQuestion以外は無視。
-                if (!favquestionUid.equals(mQuestion.getQuestionUid())) {
-                    return;
-                }
-           // }
-
-            Favorite favorite = new Favorite(favoriteUid,favquestionUid);
-            mFavorite.getFavorites().add(favorite);
-
-*/
             if (!addedFavorite.getfavQuestionUid().equals(mQuestion.getQuestionUid())) return;
 
-           // mFavorite = addedFavorite;
+
 
             View v = findViewById(android.R.id.content);
             Snackbar.make(v,"「お気に入り」へ登録しました",Snackbar.LENGTH_LONG).show();
@@ -186,6 +165,35 @@ public class QuestionDetailActivity extends AppCompatActivity {
         mAdapter.notifyDataSetChanged();
 
 
+        //Login/Logoutを検知する。
+
+        mAuthListener = new FirebaseAuth.AuthStateListener() {
+            @Override
+            public void onAuthStateChanged(FirebaseAuth firebaseAuth) {
+                FirebaseUser user = firebaseAuth.getCurrentUser();
+                if (user != null) {
+                    // User is signed in
+                    Log.d("ログイン", "しました");
+
+                    DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
+                    mFavoriteRef = databaseReference.child(Const.UsersPATH).child(user.getUid()).child(Const.FavoritesPATH);
+                    mFavoriteRef.addChildEventListener(mFavoriteEventListener);
+
+
+                } else {
+                    // User is signed out
+                    Log.d("ログアウト", "しました");
+                   // DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
+                   // mFavoriteRef = databaseReference.child(Const.UsersPATH).child(user.getUid()).child(Const.FavoritesPATH);
+                   // mFavoriteRef.removeEventListener(mFavoriteEventListener);
+
+                }
+                // ...
+            }
+        };
+        FirebaseAuth.getInstance().addAuthStateListener(mAuthListener);
+
+
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -236,7 +244,7 @@ public class QuestionDetailActivity extends AppCompatActivity {
                         Log.d("favorite", String.valueOf(mFavoriteFlag));
                         removeFavorite();
                         View v = findViewById(android.R.id.content);
-                        Snackbar.make(v, "「お気に入り」から削除しました", Snackbar.LENGTH_LONG).show();
+                        Snackbar.make(v, "「お気に入り」から削除しackbar.LENGTH_LONG).show();
                     }
                 }
             }
@@ -250,7 +258,7 @@ public class QuestionDetailActivity extends AppCompatActivity {
         mAnswerRef = dataBaseReference.child(Const.ContentsPATH).child(String.valueOf(mQuestion.getGenre())).child(mQuestion.getQuestionUid()).child(Const.AnswersPATH);
         mAnswerRef.addChildEventListener(mEventListener);
 
-
+/*
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if(user == null ){
 
@@ -266,9 +274,8 @@ public class QuestionDetailActivity extends AppCompatActivity {
             mFavoriteRef.addChildEventListener(mFavoriteEventListener);
             //setFavoriteButtonState(null); //お気に入りの追加ボタン初期状態
         }
-
+*/
         setFavoriteButtonState(null); //お気に入りの追加ボタン初期状態
-
 
     }
 

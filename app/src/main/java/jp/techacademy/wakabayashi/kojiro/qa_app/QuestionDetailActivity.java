@@ -445,6 +445,7 @@ public class QuestionDetailActivity extends AppCompatActivity {
         data.put("ouid", FirebaseAuth.getInstance().getCurrentUser().getUid());
 
         okiniRef.push().setValue(data);
+
     }
 
     public void removeOkini(String okiniUid){
@@ -461,6 +462,7 @@ public class QuestionDetailActivity extends AppCompatActivity {
 
 
             okiniRef.removeValue();
+
         }
     }
 

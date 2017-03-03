@@ -210,56 +210,61 @@ public class MainActivity extends AppCompatActivity {
                     Log.d("uid",String.valueOf(user.getUid()));
 
 
-                    if(map_child.get("okinis") != null) {
+                    if (map_child.get("okinis") != null) {
                         //Log.d("map_child",String.valueOf(map_child));
-                      //  if(map_child.get("okinis").equals("ouid" == user.getUid())) {
+                        HashMap okinis = (HashMap) map_child.get("okinis");
+                        Set<String> okinis_set = okinis.keySet();
+                        for (String okinis_set_key : okinis_set) {
+                            HashMap okinis_child = (HashMap) okinis.get(okinis_set_key);
+                            if (okinis_child.get("ouid").equals(user.getUid())) {
 
-                            String title = (String) map_child.get("title");
-                            String body = (String) map_child.get("body");
-                            String name = (String) map_child.get("name");
-                            String uid = (String) map_child.get("uid");
-                            String imageString = (String) map_child.get("image");
-                            Bitmap image = null;
-                            byte[] bytes;
-                            if (imageString != null) {
-                                BitmapFactory.Options options = new BitmapFactory.Options();
-                                bytes = Base64.decode(imageString, Base64.DEFAULT);
-                            } else {
-                                bytes = new byte[0];
-                            }
-
-                            ArrayList<Answer> answerArrayList = new ArrayList<Answer>();
-                            HashMap answerMap = (HashMap) map_child.get("answers");
-                            if (answerMap != null) {
-                                for (Object key2 : answerMap.keySet()) {
-                                    HashMap temp = (HashMap) answerMap.get((String) key2);
-                                    String answerBody = (String) temp.get("body");
-                                    String answerName = (String) temp.get("name");
-                                    String answerUid = (String) temp.get("uid");
-                                    Answer answer = new Answer(answerBody, answerName, answerUid, (String) key2);
-                                    answerArrayList.add(answer);
+                                String title = (String) map_child.get("title");
+                                String body = (String) map_child.get("body");
+                                String name = (String) map_child.get("name");
+                                String uid = (String) map_child.get("uid");
+                                String imageString = (String) map_child.get("image");
+                                Bitmap image = null;
+                                byte[] bytes;
+                                if (imageString != null) {
+                                    BitmapFactory.Options options = new BitmapFactory.Options();
+                                    bytes = Base64.decode(imageString, Base64.DEFAULT);
+                                } else {
+                                    bytes = new byte[0];
                                 }
-                            }
 
-                            // added 03032017
-                            ArrayList<Okini> okiniArrayList = new ArrayList<Okini>();
-                            HashMap okiniMap = (HashMap) map_child.get("okinis");
-                            if (okiniMap != null) {
-                                for (Object key2 : okiniMap.keySet()) {
-                                    HashMap temp2 = (HashMap) okiniMap.get((String) key2);
-
-                                    String ouid = (String) temp2.get("ouid");
-                                    Okini okini = new Okini(ouid, (String) key2);
-                                    okiniArrayList.add(okini);
+                                ArrayList<Answer> answerArrayList = new ArrayList<Answer>();
+                                HashMap answerMap = (HashMap) map_child.get("answers");
+                                if (answerMap != null) {
+                                    for (Object key2 : answerMap.keySet()) {
+                                        HashMap temp = (HashMap) answerMap.get((String) key2);
+                                        String answerBody = (String) temp.get("body");
+                                        String answerName = (String) temp.get("name");
+                                        String answerUid = (String) temp.get("uid");
+                                        Answer answer = new Answer(answerBody, answerName, answerUid, (String) key2);
+                                        answerArrayList.add(answer);
+                                    }
                                 }
-                            }
 
-                            Log.d("OkiniArrayList", String.valueOf(okiniArrayList));
-                            Question question = new Question(title, body, name, uid, qid, gii, bytes, answerArrayList, okiniArrayList);
-                        Log.d("お気に入りquestion",String.valueOf(question.getQuestionUid()));
-                            mQuestionArrayList.add(question);
-                            mAdapter.notifyDataSetChanged();
-                       // }
+                                // added 03032017
+                                ArrayList<Okini> okiniArrayList = new ArrayList<Okini>();
+                                HashMap okiniMap = (HashMap) map_child.get("okinis");
+                                if (okiniMap != null) {
+                                    for (Object key2 : okiniMap.keySet()) {
+                                        HashMap temp2 = (HashMap) okiniMap.get((String) key2);
+
+                                        String ouid = (String) temp2.get("ouid");
+                                        Okini okini = new Okini(ouid, (String) key2);
+                                        okiniArrayList.add(okini);
+                                    }
+                                }
+
+                                Log.d("OkiniArrayList", String.valueOf(okiniArrayList));
+                                Question question = new Question(title, body, name, uid, qid, gii, bytes, answerArrayList, okiniArrayList);
+                                Log.d("お気に入りquestion", String.valueOf(question.getQuestionUid()));
+                                mQuestionArrayList.add(question);
+                                mAdapter.notifyDataSetChanged();
+                            }
+                        }
                     }
 
                 }
@@ -538,46 +543,7 @@ public class MainActivity extends AppCompatActivity {
                 DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
                 drawer.closeDrawer(GravityCompat.START);
 
-                // 質問のリストをクリアしてから再度Adapterにセットし、AdapterをListViewにセットし直す
-                mQuestionArrayList.clear();
-                mAdapter.setQuestionArrayList(mQuestionArrayList);
-                mListView.setAdapter(mAdapter);
-
-                // 選択したジャンルにリスナーを登録する
-                if (mGenreRef != null) {
-                    mGenreRef.removeEventListener(mEventListener);
-                }
-
-                if(mGenre == 99){
-                    // ログイン済みのユーザーを収録する
-                    FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-
-                    if (user == null) {
-                        // ログインしていなければログイン画面に遷移させる
-                        Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
-                        startActivity(intent);
-
-                    } else {
-                        //お気に入りに入っているQuesitionidを取得して、そこから新たなmQuestionArrayListを作る。
-/*
-                        mFavoriteRef = mDatabaseReference.child(Const.UsersPATH).child(user.getUid()).child(Const.FavoritesPATH);
-                      //  mGenreRef = mDatabaseReference.child(Const.ContentsPATH).child(String.valueOf(mGenre));
-                       // mGenreRef = mDatabaseReference.child(Const.ContentsPATH);
-                        Log.d("mFavoriteRef",String.valueOf(mFavoriteRef));
-
-                        mFavoriteRef.addChildEventListener(mFavoriteEventListener);
-                        */
-
-                        mOkiniRef = mDatabaseReference.child(Const.ContentsPATH);
-
-                        mOkiniRef.addChildEventListener(mOkiniEventListener);
-                    }
-
-                } else {
-                    mGenreRef = mDatabaseReference.child(Const.ContentsPATH).child(String.valueOf(mGenre));
-                    Log.d("mGenreRef",String.valueOf(mGenreRef));
-                    mGenreRef.addChildEventListener(mEventListener);
-                }
+                reload();
                 return true;
 
             }
@@ -603,9 +569,65 @@ public class MainActivity extends AppCompatActivity {
                 Log.d("doko","これ");
             }
         });
+
+
+    }
+
+    private void reload(){
+        // 質問のリストをクリアしてから再度Adapterにセットし、AdapterをListViewにセットし直す
+        mQuestionArrayList.clear();
+        mAdapter.setQuestionArrayList(mQuestionArrayList);
+        mListView.setAdapter(mAdapter);
+
+        // 選択したジャンルにリスナーを登録する
+        if (mGenreRef != null) {
+            mGenreRef.removeEventListener(mEventListener);
+        }
+
+        if(mGenre == 99){
+            // ログイン済みのユーザーを収録する
+            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+
+            if (user == null) {
+                // ログインしていなければログイン画面に遷移させる
+                Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
+                startActivity(intent);
+
+            } else {
+                //お気に入りに入っているQuesitionidを取得して、そこから新たなmQuestionArrayListを作る。
+/*
+                        mFavoriteRef = mDatabaseReference.child(Const.UsersPATH).child(user.getUid()).child(Const.FavoritesPATH);
+                      //  mGenreRef = mDatabaseReference.child(Const.ContentsPATH).child(String.valueOf(mGenre));
+                       // mGenreRef = mDatabaseReference.child(Const.ContentsPATH);
+                        Log.d("mFavoriteRef",String.valueOf(mFavoriteRef));
+
+                        mFavoriteRef.addChildEventListener(mFavoriteEventListener);
+                        */
+
+                mOkiniRef = mDatabaseReference.child(Const.ContentsPATH);
+
+                mOkiniRef.addChildEventListener(mOkiniEventListener);
+            }
+
+        } else {
+            mGenreRef = mDatabaseReference.child(Const.ContentsPATH).child(String.valueOf(mGenre));
+            Log.d("mGenreRef",String.valueOf(mGenreRef));
+            mGenreRef.addChildEventListener(mEventListener);
+        }
+
+
     }
 
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        Log.d("Android", "onStart");
+
+        reload();
+
+
+    }
     // menu表示の話
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

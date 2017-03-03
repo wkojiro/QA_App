@@ -460,6 +460,7 @@ public class MainActivity extends AppCompatActivity {
                     //  mFavoriteRef.addChildEventListener(mFavoriteEventListener);
 
 
+
                 } else {
                     // User is signed out
                     Log.d("ログアウト", "しました");

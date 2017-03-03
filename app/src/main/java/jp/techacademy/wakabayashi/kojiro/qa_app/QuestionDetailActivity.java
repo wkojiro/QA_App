@@ -102,14 +102,18 @@ public class QuestionDetailActivity extends AppCompatActivity {
             String okiniUid = dataSnapshot.getKey();
           //  Okini addedOkini = new Okini(map.get("uid"), okiniUid);
 
+            // ログイン済みのユーザーを収録する
+            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+
+            if (!map.get("ouid").equals(user.getUid()))return;
 
         //    if (!addedOkini.getOUid().equals(mQuestion.getQuestionUid())) return;
-            for(Okini okini : mQuestion.getOkinis()) {
-                // 同じAnswerUidのものが存在しているときは何もしない
-                if (okiniUid.equals(okini.getOkiniUid())) {
-                    return;
-                }
-            }
+        //    for(Okini okini : mQuestion.getOkinis()) {
+        //        // 同じAnswerUidのものが存在しているときは何もしない
+        //        if (okiniUid.equals(okini.getOkiniUid())) {
+        //            return;
+        //        }
+        //    }
 
 
             View v = findViewById(android.R.id.content);
@@ -460,7 +464,7 @@ public class QuestionDetailActivity extends AppCompatActivity {
         }
     }
 
-
+/*
     public void addFavorite(){
         mAuth = FirebaseAuth.getInstance();
         //Log.d("", this.mQuestion);
@@ -496,5 +500,5 @@ public class QuestionDetailActivity extends AppCompatActivity {
         }
     }
 
-
+*/
 }

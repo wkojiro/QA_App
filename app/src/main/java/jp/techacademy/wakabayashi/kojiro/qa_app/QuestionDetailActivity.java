@@ -36,6 +36,7 @@ public class QuestionDetailActivity extends AppCompatActivity {
     private Favorite mFavorite;
     String mFavoriteUid;
     private String mCurrentFavoriteUid;
+    private String mCurrentOkiniUid;
 
     FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
@@ -43,6 +44,7 @@ public class QuestionDetailActivity extends AppCompatActivity {
 
     private DatabaseReference mAnswerRef;
     private DatabaseReference mFavoriteRef;
+    private DatabaseReference mOkiniRef;
 
 
     private ChildEventListener mEventListener = new ChildEventListener() {
@@ -91,6 +93,66 @@ public class QuestionDetailActivity extends AppCompatActivity {
         }
     };
 
+    public ChildEventListener mOkiniEventListener = new ChildEventListener() {
+        @Override
+        public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+            Log.d("お気に入りが追加","されました");
+
+            HashMap<String,String> map = (HashMap) dataSnapshot.getValue();
+            String okiniUid = dataSnapshot.getKey();
+          //  Okini addedOkini = new Okini(map.get("uid"), okiniUid);
+
+
+        //    if (!addedOkini.getOUid().equals(mQuestion.getQuestionUid())) return;
+            for(Okini okini : mQuestion.getOkinis()) {
+                // 同じAnswerUidのものが存在しているときは何もしない
+                if (okiniUid.equals(okini.getOkiniUid())) {
+                    return;
+                }
+            }
+
+
+            View v = findViewById(android.R.id.content);
+            Snackbar.make(v,"「お気に入り」へ登録しました",Snackbar.LENGTH_LONG).show();
+
+            setFavoriteButtonState(okiniUid);
+
+        }
+
+        @Override
+        public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+        }
+
+        @Override
+        public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+            String okiniUid = dataSnapshot.getKey();
+
+            //いま見ている質問じゃないお気に入り登録イベントは無視する
+            if (!okiniUid.equals(mCurrentOkiniUid)) return;
+
+            View v = findViewById(android.R.id.content);
+            Snackbar.make(v, "お気に入りから削除しました",Snackbar.LENGTH_LONG).show();
+
+            setFavoriteButtonState(null);
+
+        }
+
+        @Override
+        public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+        }
+
+        @Override
+        public void onCancelled(DatabaseError databaseError) {
+
+        }
+    };
+
+
+
+/*
     public ChildEventListener mFavoriteEventListener = new ChildEventListener() {
         @Override
         public void onChildAdded(DataSnapshot dataSnapshot, String s) {
@@ -143,7 +205,7 @@ public class QuestionDetailActivity extends AppCompatActivity {
 
         }
     };
-
+*/
 
 
     @Override
@@ -155,7 +217,8 @@ public class QuestionDetailActivity extends AppCompatActivity {
         // 渡ってきたQuestionのオブジェクトを保持する
         Bundle extras = getIntent().getExtras();
         mQuestion = (Question) extras.get("question");
-
+        Log.d("mQuestionの中身",String.valueOf(mQuestion));
+        Log.d("mQuestionのID",String.valueOf(mQuestion.getQuestionUid()));
         setTitle(mQuestion.getTitle()); //質問のタイトルを画面のタイトルにセットする
 
         // ListViewの準備
@@ -175,9 +238,13 @@ public class QuestionDetailActivity extends AppCompatActivity {
                     // User is signed in
                     Log.d("ログイン", "しました");
 
-                    DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
-                    mFavoriteRef = databaseReference.child(Const.UsersPATH).child(user.getUid()).child(Const.FavoritesPATH);
-                    mFavoriteRef.addChildEventListener(mFavoriteEventListener);
+//                    DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
+//                    mFavoriteRef = databaseReference.child(Const.UsersPATH).child(user.getUid()).child(Const.FavoritesPATH);
+//                    mFavoriteRef.addChildEventListener(mFavoriteEventListener);
+
+                    DatabaseReference dataBaseReference = FirebaseDatabase.getInstance().getReference();
+                    mOkiniRef = dataBaseReference.child(Const.ContentsPATH).child(String.valueOf(mQuestion.getGenre())).child(mQuestion.getQuestionUid()).child(Const.OkinisPATH);
+                    mOkiniRef.addChildEventListener(mOkiniEventListener);
 
 
                 } else {
@@ -279,17 +346,19 @@ public class QuestionDetailActivity extends AppCompatActivity {
 
     }
 
-    private void setFavoriteButtonState(String favoriteUid){
+    private void setFavoriteButtonState(String okiniUid){
         final FloatingActionButton fab2 = (FloatingActionButton) findViewById(R.id.fab2);
 
-            if (favoriteUid == null) {
+            if (okiniUid == null) {
                 fab2.setImageResource(R.drawable.ic_action_heart);
                 fab2.setOnClickListener(mFavoriteAddListner);
             } else {
                 fab2.setImageResource(R.drawable.ic_action_whiteheart);
                 fab2.setOnClickListener(mFavoriteRemoveListener);
             }
-            mCurrentFavoriteUid = favoriteUid;
+            //mCurrentFavoriteUid = favoriteUid;
+            mCurrentOkiniUid = okiniUid;
+
 
     }
 
@@ -308,7 +377,8 @@ public class QuestionDetailActivity extends AppCompatActivity {
 
                 final FloatingActionButton fab2 = (FloatingActionButton) findViewById(R.id.fab2);
                 fab2.setImageResource(R.drawable.ic_action_whiteheart);
-                addFavorite();
+               // addFavorite();
+                addOkini();
             }
         }
     };
@@ -327,7 +397,8 @@ public class QuestionDetailActivity extends AppCompatActivity {
 
                 final FloatingActionButton fab2 = (FloatingActionButton) findViewById(R.id.fab2);
                 fab2.setImageResource(R.drawable.ic_action_heart);
-                removeFavorite(mCurrentFavoriteUid);
+                //removeFavorite(mCurrentFavoriteUid);
+                removeOkini(mCurrentOkiniUid);
             }
         }
     };
@@ -353,6 +424,42 @@ public class QuestionDetailActivity extends AppCompatActivity {
     };
 
     */
+
+    public void addOkini(){
+        mAuth = FirebaseAuth.getInstance();
+        //Log.d("", this.mQuestion);
+        FirebaseUser user = mAuth.getCurrentUser();
+
+        Log.d("User", String.valueOf(user));
+
+        DatabaseReference dataBaseReference = FirebaseDatabase.getInstance().getReference();
+        DatabaseReference okiniRef = dataBaseReference.child(Const.ContentsPATH).child(String.valueOf(mQuestion.getGenre())).child(mQuestion.getQuestionUid()).child(Const.OkinisPATH);
+
+        Map<String, String> data = new HashMap<String, String>();
+
+        // UID
+        data.put("ouid", FirebaseAuth.getInstance().getCurrentUser().getUid());
+
+        okiniRef.push().setValue(data);
+    }
+
+    public void removeOkini(String okiniUid){
+
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        if (user == null) {
+            // ログインしていなければログイン画面に遷移させる
+            Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
+            startActivity(intent);
+        } else {
+            // ログインユーザーのFavoritePATHへ移動
+            DatabaseReference dataBaseReference = FirebaseDatabase.getInstance().getReference();
+            DatabaseReference okiniRef = dataBaseReference.child(Const.ContentsPATH).child(String.valueOf(mQuestion.getGenre())).child(mQuestion.getQuestionUid()).child(Const.OkinisPATH).child(okiniUid);;
+
+
+            okiniRef.removeValue();
+        }
+    }
+
 
     public void addFavorite(){
         mAuth = FirebaseAuth.getInstance();

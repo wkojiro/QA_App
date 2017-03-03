@@ -34,6 +34,8 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
@@ -42,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
     private int mGenre = 0;
     private DatabaseReference mQestion;
     private String genreid;
+    private String favquestionUid ;
 
     private FirebaseAuth.AuthStateListener mAuthListener;
 
@@ -49,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
     private DatabaseReference mDatabaseReference;
     private DatabaseReference mFavoriteRef;
     private DatabaseReference mGenreRef;
+    private DatabaseReference mOkiniRef;
     private ListView mListView;
     private ArrayList<Question> mQuestionArrayList;
     private QuestionsListAdapter mAdapter;
@@ -56,9 +60,12 @@ public class MainActivity extends AppCompatActivity {
    // private ValueEventListener mQueryListener;
 
 
+    /*
     private ValueEventListener mQueryListener = new ValueEventListener() {
         @Override
         public void onDataChange(DataSnapshot dataSnapshot) {
+            dataSnapshot.getKey();
+            Log.d("お気に入り最終dataSnapshot.getKey()",String.valueOf(dataSnapshot.getKey()));
 
             String gid = dataSnapshot.getRef().getKey();
             int gii = Integer.parseInt(gid);
@@ -79,6 +86,7 @@ public class MainActivity extends AppCompatActivity {
                     HashMap map_child = (HashMap)map.get(key);
                    // Log.d("マップmap",String.valueOf(map_child));
                    // String genre = (String) map_child.get()
+                   // String questionUid = favquestionUid;
                     String title = (String) map_child.get("title");
                     String body = (String) map_child.get("body");
                     String name = (String) map_child.get("name");
@@ -106,6 +114,10 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }
 
+                    //ArrayList<Okini> okiniArrayList = new ArrayList<Okini>();
+
+
+
                     Question question = new Question(title, body, name, uid, dataSnapshot.getKey(), gii, bytes, answerArrayList);
                     mQuestionArrayList.add(question);
                     mAdapter.notifyDataSetChanged();
@@ -126,9 +138,9 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onChildAdded(DataSnapshot dataSnapshot, String s) {
             HashMap map = (HashMap) dataSnapshot.getValue();
-
+            Log.d("お気に入りdataSnapshot.getKey()",String.valueOf(dataSnapshot.getKey()));
            // String questionUid = dataSnapshot.getKey
-            String questionUid = (String) map.get("questionid");
+            favquestionUid = (String) map.get("questionid");
             //Log.d("マップmap",String.valueOf(questionUid));
 
             View v = findViewById(android.R.id.content);
@@ -140,16 +152,174 @@ public class MainActivity extends AppCompatActivity {
             genreの情報がない状態で、どのようにデータにたどりつけるか。
             mDatabaseReference = FirebaseDatabase.getInstance().getReference();
             */
-
-            mDatabaseReference.child("contents").child("1").orderByKey().equalTo(questionUid).addListenerForSingleValueEvent(mQueryListener);
-            mDatabaseReference.child("contents").child("2").orderByKey().equalTo(questionUid).addListenerForSingleValueEvent(mQueryListener);
-            mDatabaseReference.child("contents").child("3").orderByKey().equalTo(questionUid).addListenerForSingleValueEvent(mQueryListener);
-            mDatabaseReference.child("contents").child("4").orderByKey().equalTo(questionUid).addListenerForSingleValueEvent(mQueryListener);
+/*
+            mDatabaseReference.child("contents").child("1").orderByKey().equalTo(favquestionUid).addListenerForSingleValueEvent(mQueryListener);
+            mDatabaseReference.child("contents").child("2").orderByKey().equalTo(favquestionUid).addListenerForSingleValueEvent(mQueryListener);
+            mDatabaseReference.child("contents").child("3").orderByKey().equalTo(favquestionUid).addListenerForSingleValueEvent(mQueryListener);
+            mDatabaseReference.child("contents").child("4").orderByKey().equalTo(favquestionUid).addListenerForSingleValueEvent(mQueryListener);
 
         }
 
         @Override
         public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+
+        }
+
+        @Override
+        public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+        }
+
+        @Override
+        public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+        }
+
+        @Override
+        public void onCancelled(DatabaseError databaseError) {
+
+        }
+    };
+*/
+
+    private ChildEventListener mOkiniEventListener = new ChildEventListener() {
+        @Override
+        public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+            HashMap map = (HashMap) dataSnapshot.getValue();
+            Log.d("OkiniMap",String.valueOf(map));
+
+
+            String gid = dataSnapshot.getKey();
+            int gii = Integer.parseInt(gid);
+
+
+            if(map!=null) {
+                //      Iterator iter = map.keySet().iterator();
+                Iterator iter = map.keySet().iterator();
+
+                Set<String> set = map.keySet();
+                for (String key : set) {
+                    String qid = key; //本来のQuestionidをくわせる。
+                    HashMap map_child = (HashMap) map.get(key);
+
+                    //Log.d("map_child",String.valueOf(map_child));
+
+                    FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+
+                    Log.d("uid",String.valueOf(user.getUid()));
+
+
+                    if(map_child.get("okinis") != null) {
+                        //Log.d("map_child",String.valueOf(map_child));
+                      //  if(map_child.get("okinis").equals("ouid" == user.getUid())) {
+
+                            String title = (String) map_child.get("title");
+                            String body = (String) map_child.get("body");
+                            String name = (String) map_child.get("name");
+                            String uid = (String) map_child.get("uid");
+                            String imageString = (String) map_child.get("image");
+                            Bitmap image = null;
+                            byte[] bytes;
+                            if (imageString != null) {
+                                BitmapFactory.Options options = new BitmapFactory.Options();
+                                bytes = Base64.decode(imageString, Base64.DEFAULT);
+                            } else {
+                                bytes = new byte[0];
+                            }
+
+                            ArrayList<Answer> answerArrayList = new ArrayList<Answer>();
+                            HashMap answerMap = (HashMap) map_child.get("answers");
+                            if (answerMap != null) {
+                                for (Object key2 : answerMap.keySet()) {
+                                    HashMap temp = (HashMap) answerMap.get((String) key2);
+                                    String answerBody = (String) temp.get("body");
+                                    String answerName = (String) temp.get("name");
+                                    String answerUid = (String) temp.get("uid");
+                                    Answer answer = new Answer(answerBody, answerName, answerUid, (String) key2);
+                                    answerArrayList.add(answer);
+                                }
+                            }
+
+                            // added 03032017
+                            ArrayList<Okini> okiniArrayList = new ArrayList<Okini>();
+                            HashMap okiniMap = (HashMap) map_child.get("okinis");
+                            if (okiniMap != null) {
+                                for (Object key2 : okiniMap.keySet()) {
+                                    HashMap temp2 = (HashMap) okiniMap.get((String) key2);
+
+                                    String ouid = (String) temp2.get("ouid");
+                                    Okini okini = new Okini(ouid, (String) key2);
+                                    okiniArrayList.add(okini);
+                                }
+                            }
+
+                            Log.d("OkiniArrayList", String.valueOf(okiniArrayList));
+                            Question question = new Question(title, body, name, uid, qid, gii, bytes, answerArrayList, okiniArrayList);
+                        Log.d("お気に入りquestion",String.valueOf(question.getQuestionUid()));
+                            mQuestionArrayList.add(question);
+                            mAdapter.notifyDataSetChanged();
+                       // }
+                    }
+
+                }
+
+            }
+
+
+        }
+
+        @Override
+        public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+            HashMap map = (HashMap) dataSnapshot.getValue();
+
+            String gid = dataSnapshot.getKey();
+            int gii = Integer.parseInt(gid);
+
+
+            if(map!=null) {
+                //      Iterator iter = map.keySet().iterator();
+                Iterator iter = map.keySet().iterator();
+
+                Set<String> set = map.keySet();
+                for (String key : set) {
+                    HashMap map_child = (HashMap) map.get(key);
+
+                    for (Question question : mQuestionArrayList) {
+                        if (dataSnapshot.getKey().equals(question.getQuestionUid())) {
+                            // このアプリで変更がある可能性があるのは回答(Answer)のみ
+                            //         Log.d("onChildChangedマップmap",String.valueOf(map));
+
+                            question.getAnswers().clear();
+                            HashMap answerMap = (HashMap) map_child.get("answers");
+                            if (answerMap != null) {
+                                for (Object key2 : answerMap.keySet()) {
+                                    HashMap temp = (HashMap) answerMap.get((String) key2);
+                                    String answerBody = (String) temp.get("body");
+                                    String answerName = (String) temp.get("name");
+                                    String answerUid = (String) temp.get("uid");
+                                    Answer answer = new Answer(answerBody, answerName, answerUid, (String) key2);
+                                    question.getAnswers().add(answer);
+                                }
+                            }
+
+                            question.getOkinis().clear();
+                            HashMap okiniMap = (HashMap) map_child.get("okinis");
+                            if (okiniMap != null) {
+                                for (Object key2 : okiniMap.keySet()) {
+                                    HashMap temp = (HashMap) okiniMap.get((String) key2);
+
+                                    String ouid = (String) temp.get("ouid");
+                                    Okini okini = new Okini(ouid, (String) key2);
+                                    question.getOkinis().add(okini);
+                                }
+                            }
+
+                            mAdapter.notifyDataSetChanged();
+                        }
+                    }
+                }
+            }
 
         }
 
@@ -169,12 +339,12 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-
     private ChildEventListener mEventListener = new ChildEventListener() {
         @Override
         public void onChildAdded(DataSnapshot dataSnapshot, String s) {
             HashMap map = (HashMap) dataSnapshot.getValue();
-           // Log.d("マップmap",String.valueOf(map));
+            //Log.d("正常map",String.valueOf(map));
+
             String title = (String) map.get("title");
             String body = (String) map.get("body");
             String name = (String) map.get("name");
@@ -202,19 +372,36 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
 
-            Question question = new Question(title, body, name, uid, dataSnapshot.getKey(), mGenre, bytes, answerArrayList);
+        // added 03032017
+            ArrayList<Okini> okiniArrayList = new ArrayList<Okini>();
+            HashMap okiniMap = (HashMap) map.get("okinis");
+            if (okiniMap != null) {
+                for (Object key : okiniMap.keySet()) {
+                    HashMap temp2 = (HashMap) okiniMap.get((String) key);
+
+                    String ouid = (String) temp2.get("ouid");
+                    Okini okini = new Okini(ouid, (String) key);
+                    okiniArrayList.add(okini);
+                }
+            }
+
+            Question question = new Question(title, body, name, uid, dataSnapshot.getKey(), mGenre, bytes, answerArrayList, okiniArrayList);
             mQuestionArrayList.add(question);
+            Log.d("通常question",String.valueOf(question.getQuestionUid()));
             mAdapter.notifyDataSetChanged();
         }
 
         @Override
         public void onChildChanged(DataSnapshot dataSnapshot, String s) {
             HashMap map = (HashMap) dataSnapshot.getValue();
-
+          //  Log.d("onChildChangedマップmap",String.valueOf(map));
+         //   Log.d("dataSnapshot.getKey()",String.valueOf(dataSnapshot.getKey()));
             // 変更があったQuestionを探す
             for (Question question: mQuestionArrayList) {
                 if (dataSnapshot.getKey().equals(question.getQuestionUid())) {
                     // このアプリで変更がある可能性があるのは回答(Answer)のみ
+           //         Log.d("onChildChangedマップmap",String.valueOf(map));
+
                     question.getAnswers().clear();
                     HashMap answerMap = (HashMap) map.get("answers");
                     if (answerMap != null) {
@@ -371,13 +558,18 @@ public class MainActivity extends AppCompatActivity {
 
                     } else {
                         //お気に入りに入っているQuesitionidを取得して、そこから新たなmQuestionArrayListを作る。
-
+/*
                         mFavoriteRef = mDatabaseReference.child(Const.UsersPATH).child(user.getUid()).child(Const.FavoritesPATH);
                       //  mGenreRef = mDatabaseReference.child(Const.ContentsPATH).child(String.valueOf(mGenre));
                        // mGenreRef = mDatabaseReference.child(Const.ContentsPATH);
                         Log.d("mFavoriteRef",String.valueOf(mFavoriteRef));
 
                         mFavoriteRef.addChildEventListener(mFavoriteEventListener);
+                        */
+
+                        mOkiniRef = mDatabaseReference.child(Const.ContentsPATH);
+
+                        mOkiniRef.addChildEventListener(mOkiniEventListener);
                     }
 
                 } else {

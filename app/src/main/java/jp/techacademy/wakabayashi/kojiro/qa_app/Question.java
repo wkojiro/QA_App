@@ -14,6 +14,7 @@ public class Question implements Serializable {
     private int mGenre;
     private byte[] mBitmapArray;
     private ArrayList<Answer> mAnswerArrayList;
+    private ArrayList<Okini> mOkiniArrayList;
 
     public String getTitle() {
         return mTitle;
@@ -45,8 +46,11 @@ public class Question implements Serializable {
     public ArrayList<Answer> getAnswers() {
         return mAnswerArrayList;
     }
+    public ArrayList<Okini> getOkinis(){
+        return  mOkiniArrayList;
+    }
 
-    public Question(String title, String body, String name, String uid, String questionUid, int genre, byte[] bytes, ArrayList<Answer> answers ) {
+    public Question(String title, String body, String name, String uid, String questionUid, int genre, byte[] bytes, ArrayList<Answer> answers, ArrayList<Okini> okinis ) {
         mTitle = title;
         mBody = body;
         mName = name;
@@ -55,6 +59,7 @@ public class Question implements Serializable {
         mGenre = genre;
         mBitmapArray = bytes.clone();
         mAnswerArrayList = answers;
+        mOkiniArrayList = okinis;
 
     }
 }

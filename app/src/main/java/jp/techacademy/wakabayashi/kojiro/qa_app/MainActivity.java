@@ -34,6 +34,7 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -70,11 +71,12 @@ public class MainActivity extends AppCompatActivity {
 
             if(map!=null)
             {
+          //      Iterator iter = map.keySet().iterator();
                 Iterator iter = map.keySet().iterator();
 
-                while(iter.hasNext()==true)
-                {
-                    HashMap map_child = (HashMap)map.get(iter.next());
+                Set<String> set = map.keySet();
+                for (String key: set) {
+                    HashMap map_child = (HashMap)map.get(key);
                    // Log.d("マップmap",String.valueOf(map_child));
                    // String genre = (String) map_child.get()
                     String title = (String) map_child.get("title");
@@ -94,12 +96,12 @@ public class MainActivity extends AppCompatActivity {
                     ArrayList<Answer> answerArrayList = new ArrayList<Answer>();
                     HashMap answerMap = (HashMap) map_child.get("answers");
                     if (answerMap != null) {
-                        for (Object key : answerMap.keySet()) {
-                            HashMap temp = (HashMap) answerMap.get((String) key);
+                        for (Object key2 : answerMap.keySet()) {
+                            HashMap temp = (HashMap) answerMap.get((String) key2);
                             String answerBody = (String) temp.get("body");
                             String answerName = (String) temp.get("name");
                             String answerUid = (String) temp.get("uid");
-                            Answer answer = new Answer(answerBody, answerName, answerUid, (String) key);
+                            Answer answer = new Answer(answerBody, answerName, answerUid, (String) key2);
                             answerArrayList.add(answer);
                         }
                     }
